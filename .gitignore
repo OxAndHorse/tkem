@@ -3,3 +3,4 @@ proofs/fstar/extraction/.cache/
 proofs/fstar/extraction/.depend
 proofs/fstar/extraction/*.fst*
 target
+*.pdf

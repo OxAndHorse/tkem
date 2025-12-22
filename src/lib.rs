@@ -125,6 +125,10 @@ pub mod mlkem768;
 pub mod tkem768;
 
 
+#[cfg(feature = "tkem1024")]
+#[cfg_attr(docsrs, doc(cfg(feature = "tkem1024")))]
+pub mod tkem1024;
+
 
 #[cfg(feature = "mlkem1024")]
 #[cfg_attr(docsrs, doc(cfg(feature = "mlkem1024")))]
@@ -159,8 +163,11 @@ cfg_kyber! {
         cfg_no_eurydice! {
             pub use crate::mlkem768::kyber::Kyber768;
             pub use crate::mlkem768::kyber::generate_key_pair;
+            pub use crate::tkem768::kyber::generate_key_pair1;
             pub use crate::mlkem768::kyber::decapsulate;
+            pub use crate::tkem768::kyber::decapsulate_with_tag;
             pub use crate::mlkem768::kyber::encapsulate;
+            pub use crate::tkem768::kyber::encapsulate_with_tag;
             pub use crate::mlkem768::validate_public_key;
             pub use crate::mlkem768::validate_private_key;
         }
@@ -173,8 +180,11 @@ cfg_kyber! {
         cfg_no_eurydice! {
             pub use crate::mlkem1024::kyber::Kyber1024;
             pub use crate::mlkem1024::kyber::generate_key_pair;
+            pub use crate::tkem1024::kyber::generate_key_pair1;
             pub use crate::mlkem1024::kyber::decapsulate;
+            pub use crate::tkem1024::kyber::decapsulate_with_tag;
             pub use crate::mlkem1024::kyber::encapsulate;
+            pub use crate::tkem1024::kyber::encapsulate_with_tag;
             pub use crate::mlkem1024::validate_public_key;
             pub use crate::mlkem1024::validate_private_key;
         }

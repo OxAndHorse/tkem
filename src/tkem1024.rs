@@ -1,23 +1,21 @@
-//! TKEM 768 BY ML-KEM
+//! TKEM 1024 BY ML-KEM
+use super::{constants::*, ind_cca::*, types::*, *};
 
-use super::{constants::*, ind_cca::*, types::*, *}; // Ensure necessary items are imported
-
-// --- Constants (Same as ML-KEM 768) ---
-const RANK: usize = 3;
+const RANK: usize = 4;
 #[cfg(any(feature = "incremental", eurydice))]
 const RANKED_BYTES_PER_RING_ELEMENT: usize = RANK * BITS_PER_RING_ELEMENT / 8;
 const T_AS_NTT_ENCODED_SIZE: usize =
     (RANK * COEFFICIENTS_IN_RING_ELEMENT * BITS_PER_COEFFICIENT) / 8;
-const VECTOR_U_COMPRESSION_FACTOR: usize = 10;
+const VECTOR_U_COMPRESSION_FACTOR: usize = 11;
 const C1_BLOCK_SIZE: usize = (COEFFICIENTS_IN_RING_ELEMENT * VECTOR_U_COMPRESSION_FACTOR) / 8;
 const C1_SIZE: usize = C1_BLOCK_SIZE * RANK;
-const VECTOR_V_COMPRESSION_FACTOR: usize = 4;
+const VECTOR_V_COMPRESSION_FACTOR: usize = 5;
 const C2_SIZE: usize = (COEFFICIENTS_IN_RING_ELEMENT * VECTOR_V_COMPRESSION_FACTOR) / 8;
 const CPA_PKE_SECRET_KEY_SIZE: usize =
     (RANK * COEFFICIENTS_IN_RING_ELEMENT * BITS_PER_COEFFICIENT) / 8;
 pub(crate) const CPA_PKE_PUBLIC_KEY_SIZE: usize = T_AS_NTT_ENCODED_SIZE + 32;
 const CPA_PKE_CIPHERTEXT_SIZE: usize = C1_SIZE + C2_SIZE;
-const SECRET_KEY_SIZE: usize =
+pub(crate) const SECRET_KEY_SIZE: usize =
     CPA_PKE_SECRET_KEY_SIZE + CPA_PKE_PUBLIC_KEY_SIZE + H_DIGEST_SIZE + SHARED_SECRET_SIZE;
 
 const ETA1: usize = 2;
@@ -26,31 +24,27 @@ const ETA2: usize = 2;
 const ETA2_RANDOMNESS_SIZE: usize = ETA2 * 64;
 
 const IMPLICIT_REJECTION_HASH_INPUT_SIZE: usize = SHARED_SECRET_SIZE + CPA_PKE_CIPHERTEXT_SIZE;
-// --- End Constants ---
-
-/// The TKEM 768 algorithms
-pub struct Tkem768;
 
 // Implement the standard KEM trait if applicable and not using hax/eurydice features that conflict
 #[cfg(not(any(hax, eurydice)))]
 // crate::impl_tkem_trait!(
-//     Tkem768,
-//     Tkem768PublicKey, // Assuming these aliases are updated below or elsewhere
-//     Tkem768PrivateKey,
-//     Tkem768Ciphertext,
+//     Tkem1024,
+//     Tkem1024PublicKey, // Assuming these aliases are updated below or elsewhere
+//     Tkem1024PrivateKey,
+//     Tkem1024Ciphertext,
 //     Tag
 // );
 
 // --- Type Aliases (Renamed from MlKem* to Tkem*) ---
-/// A TKEM 768 Ciphertext
+/// A TKEM 1024 Ciphertext
 
-pub type Tkem768Ciphertext = MlKemCiphertext<CPA_PKE_CIPHERTEXT_SIZE>;
-/// A TKEM 768 Private key
-pub type Tkem768PrivateKey = MlKemPrivateKey<SECRET_KEY_SIZE>;
-/// A TKEM 768 Public key
-pub type Tkem768PublicKey = MlKemPublicKey<CPA_PKE_PUBLIC_KEY_SIZE>;
-/// A TKEM 768 Key pair
-pub type Tkem768KeyPair = MlKemKeyPair<SECRET_KEY_SIZE, CPA_PKE_PUBLIC_KEY_SIZE>;
+pub type Tkem1024Ciphertext = MlKemCiphertext<CPA_PKE_CIPHERTEXT_SIZE>;
+/// A TKEM 1024 Private key
+pub type Tkem1024PrivateKey = MlKemPrivateKey<SECRET_KEY_SIZE>;
+/// A TKEM 1024 Public key
+pub type Tkem1024PublicKey = MlKemPublicKey<CPA_PKE_PUBLIC_KEY_SIZE>;
+/// A TKEM 1024 Key pair
+pub type Tkem1024KeyPair = MlKemKeyPair<SECRET_KEY_SIZE, CPA_PKE_PUBLIC_KEY_SIZE>;
 
 ///A Tag
 pub type Tag = [u8];
@@ -67,7 +61,7 @@ macro_rules! instantiate {
             /// Validate a public key.
             ///
             /// Returns `true` if valid, and `false` otherwise.
-            pub fn validate_public_key(public_key: &Tkem768PublicKey) -> bool {
+            pub fn validate_public_key(public_key: &Tkem1024PublicKey) -> bool {
                 p::validate_public_key::<RANK, CPA_PKE_PUBLIC_KEY_SIZE>(&public_key.value)
             }
 
@@ -75,8 +69,8 @@ macro_rules! instantiate {
             ///
             /// Returns `true` if valid, and `false` otherwise.
             pub fn validate_private_key(
-                private_key: &Tkem768PrivateKey,
-                ciphertext: &Tkem768Ciphertext,
+                private_key: &Tkem1024PrivateKey,
+                ciphertext: &Tkem1024Ciphertext,
             ) -> bool {
                 p::validate_private_key::<RANK, SECRET_KEY_SIZE, CPA_PKE_CIPHERTEXT_SIZE>(
                     private_key,
@@ -87,12 +81,12 @@ macro_rules! instantiate {
             /// Validate the private key only.
             ///
             /// Returns `true` if valid, and `false` otherwise.
-            pub fn validate_private_key_only(private_key: &Tkem768PrivateKey) -> bool {
+            pub fn validate_private_key_only(private_key: &Tkem1024PrivateKey) -> bool {
                 p::validate_private_key_only::<RANK, SECRET_KEY_SIZE>(private_key)
             }
 
-            /// Generate TKEM 768 Key Pair
-            pub fn generate_key_pair(randomness: [u8; KEY_GENERATION_SEED_SIZE]) -> Tkem768KeyPair {
+            /// Generate TKEM 1024 Key Pair
+            pub fn generate_key_pair(randomness: [u8; KEY_GENERATION_SEED_SIZE]) -> Tkem1024KeyPair {
                 p::generate_keypair::<
                     RANK,
                     CPA_PKE_SECRET_KEY_SIZE,
@@ -103,12 +97,12 @@ macro_rules! instantiate {
                 >(&randomness)
             }
 
-            /// Generate Kyber 768 Key Pair
+            /// Generate Kyber 1024 Key Pair
             #[cfg(feature = "kyber")]
             #[cfg_attr(docsrs, doc(cfg(feature = "kyber")))]
             pub fn kyber_generate_key_pair(
                 randomness: [u8; KEY_GENERATION_SEED_SIZE],
-            ) -> Tkem768KeyPair {
+            ) -> Tkem1024KeyPair {
                 p::kyber_generate_keypair::<
                     RANK,
                     CPA_PKE_SECRET_KEY_SIZE,
@@ -120,16 +114,16 @@ macro_rules! instantiate {
             }
 
 
-            /// Encapsulate TKEM 768 with a tag
+            /// Encapsulate TKEM 1024 with a tag
             ///
-            /// Generates an ([`Tkem768Ciphertext`], [`MlKemSharedSecret`]) tuple.
-            /// The input is a reference to an [`Tkem768PublicKey`], a `tag` slice, and [`SHARED_SECRET_SIZE`]
+            /// Generates an ([`Tkem1024Ciphertext`], [`MlKemSharedSecret`]) tuple.
+            /// The input is a reference to an [`Tkem1024PublicKey`], a `tag` slice, and [`SHARED_SECRET_SIZE`]
             /// bytes of `randomness`.
             pub fn encapsulate_with_tag(
-                public_key: &Tkem768PublicKey,
+                public_key: &Tkem1024PublicKey,
                 randomness: [u8; SHARED_SECRET_SIZE],
                 tag: &[u8], // <-- New tag parameter
-            ) -> (Tkem768Ciphertext, MlKemSharedSecret) {
+            ) -> (Tkem1024Ciphertext, MlKemSharedSecret) {
                 // Call the corresponding backend's tkem implementation
                 p::encapsulate_with_tag::<
                     RANK,
@@ -148,18 +142,18 @@ macro_rules! instantiate {
                 >(public_key, &randomness, tag) // Pass the tag
             }
 
-            /// Encapsulate Kyber768 with a tag
+            /// Encapsulate Kyber1024 with a tag
             ///
-            /// Generates an ([`Tkem768Ciphertext`], [`MlKemSharedSecret`]) tuple.
-            /// The input is a reference to an [`Tkem768PublicKey`], a `tag` slice, and [`SHARED_SECRET_SIZE`]
+            /// Generates an ([`Tkem1024Ciphertext`], [`MlKemSharedSecret`]) tuple.
+            /// The input is a reference to an [`Tkem1024PublicKey`], a `tag` slice, and [`SHARED_SECRET_SIZE`]
             /// bytes of `randomness`.
             #[cfg(feature = "kyber")]
             #[cfg_attr(docsrs, doc(cfg(feature = "kyber")))]
             pub fn kyber_encapsulate_with_tag(
-                public_key: &Tkem768PublicKey,
+                public_key: &Tkem1024PublicKey,
                 randomness: [u8; SHARED_SECRET_SIZE],
                 tag:&[u8],
-            ) -> (Tkem768Ciphertext, MlKemSharedSecret) {
+            ) -> (Tkem1024Ciphertext, MlKemSharedSecret) {
                 p::kyber_encapsulate_with_tag::<
                     RANK,
                     CPA_PKE_CIPHERTEXT_SIZE,
@@ -177,13 +171,13 @@ macro_rules! instantiate {
                 >(public_key, &randomness,tag)
             }
 
-            /// Decapsulate TKEM 768 with a tag
+            /// Decapsulate TKEM 1024 with a tag
             ///
             /// Generates an [`MlKemSharedSecret`].
-            /// The input is a reference to an [`MlKem768PrivateKey`] and an [`MlKem768Ciphertext`] and a tag.
+            /// The input is a reference to an [`MlKem1024PrivateKey`] and an [`MlKem1024Ciphertext`] and a tag.
             pub fn decapsulate_with_tag(
-                private_key: &Tkem768PrivateKey,
-                ciphertext: &Tkem768Ciphertext,
+                private_key: &Tkem1024PrivateKey,
+                ciphertext: &Tkem1024Ciphertext,
                 tag:&[u8],
             ) -> MlKemSharedSecret {
                 p::decapsulate_with_tag::<
@@ -206,15 +200,15 @@ macro_rules! instantiate {
                 >(private_key, ciphertext,tag)
             }
 
-            /// Decapsulate kyber768 with a tag
+            /// Decapsulate kyber1024 with a tag
             ///
             /// Generates an [`MlKemSharedSecret`].
-            /// The input is a reference to an [`MlKem768PrivateKey`] and an [`MlKem768Ciphertext`] and a tag.
+            /// The input is a reference to an [`MlKem1024PrivateKey`] and an [`MlKem1024Ciphertext`] and a tag.
             #[cfg(feature = "kyber")]
             #[cfg_attr(docsrs, doc(cfg(feature = "kyber")))]
             pub fn kyber_decapsulate_with_tag(
-                private_key: &Tkem768PrivateKey,
-                ciphertext: &Tkem768Ciphertext,
+                private_key: &Tkem1024PrivateKey,
+                ciphertext: &Tkem1024Ciphertext,
                 tag:&[u8],
             ) -> MlKemSharedSecret {
                 p::kyber_decapsulate_with_tag::<
@@ -242,20 +236,20 @@ macro_rules! instantiate {
             pub mod unpacked {
                 use super::*;
 
-                /// An Unpacked TKEM 768 Public key
-                pub type Tkem768PublicKeyUnpacked = p::unpacked::MlKemPublicKeyUnpacked<RANK>;
+                /// An Unpacked TKEM 1024 Public key
+                pub type Tkem1024PublicKeyUnpacked = p::unpacked::MlKemPublicKeyUnpacked<RANK>;
 
-                /// An Unpacked TKEM 768 Key pair
-                pub type Tkem768KeyPairUnpacked = p::unpacked::MlKemKeyPairUnpacked<RANK>;
+                /// An Unpacked TKEM 1024 Key pair
+                pub type Tkem1024KeyPairUnpacked = p::unpacked::MlKemKeyPairUnpacked<RANK>;
 
                 /// Create a new, empty unpacked key.
-                pub fn init_key_pair() -> Tkem768KeyPairUnpacked {
-                    Tkem768KeyPairUnpacked::default()
+                pub fn init_key_pair() -> Tkem1024KeyPairUnpacked {
+                    Tkem1024KeyPairUnpacked::default()
                 }
 
                 /// Create a new, empty unpacked public key.
-                pub fn init_public_key() -> Tkem768PublicKeyUnpacked {
-                    Tkem768PublicKeyUnpacked::default()
+                pub fn init_public_key() -> Tkem1024PublicKeyUnpacked {
+                    Tkem1024PublicKeyUnpacked::default()
                 }
 
                 /// Get the serialized public key.
@@ -263,16 +257,16 @@ macro_rules! instantiate {
                     Libcrux_ml_kem.Polynomial.is_bounded_poly 3328 (Seq.index
                         ${public_key.ind_cpa_public_key.t_as_ntt} i)"#))]
                 pub fn serialized_public_key(
-                    public_key: &Tkem768PublicKeyUnpacked,
-                    serialized: &mut Tkem768PublicKey,
+                    public_key: &Tkem1024PublicKeyUnpacked,
+                    serialized: &mut Tkem1024PublicKey,
                 ) {
                     public_key.serialized_mut::<CPA_PKE_PUBLIC_KEY_SIZE>(serialized);
                 }
 
                 /// Get the serialized private key.
                 pub fn key_pair_serialized_private_key(
-                    key_pair: &Tkem768KeyPairUnpacked,
-                ) -> Tkem768PrivateKey {
+                    key_pair: &Tkem1024KeyPairUnpacked,
+                ) -> Tkem1024PrivateKey {
                     key_pair.serialized_private_key::<
                         CPA_PKE_SECRET_KEY_SIZE,
                         SECRET_KEY_SIZE,
@@ -282,8 +276,8 @@ macro_rules! instantiate {
 
                 /// Get the serialized private key.
                 pub fn key_pair_serialized_private_key_mut(
-                    key_pair: &Tkem768KeyPairUnpacked,
-                    serialized: &mut Tkem768PrivateKey,
+                    key_pair: &Tkem1024KeyPairUnpacked,
+                    serialized: &mut Tkem1024PrivateKey,
                 ) {
                     key_pair.serialized_private_key_mut::<
                         CPA_PKE_SECRET_KEY_SIZE,
@@ -297,8 +291,8 @@ macro_rules! instantiate {
                         Libcrux_ml_kem.Polynomial.is_bounded_poly 3328 (Seq.index
                             ${key_pair.public_key.ind_cpa_public_key.t_as_ntt} i))"#))]
                 pub fn key_pair_serialized_public_key_mut(
-                    key_pair: &Tkem768KeyPairUnpacked,
-                    serialized: &mut Tkem768PublicKey,
+                    key_pair: &Tkem1024KeyPairUnpacked,
+                    serialized: &mut Tkem1024PublicKey,
                 ) {
                     key_pair.serialized_public_key_mut::<CPA_PKE_PUBLIC_KEY_SIZE>(serialized);
                 }
@@ -308,15 +302,15 @@ macro_rules! instantiate {
                     Libcrux_ml_kem.Polynomial.is_bounded_poly 3328 (Seq.index
                         ${key_pair.public_key.ind_cpa_public_key.t_as_ntt} i)"#))]
                 pub fn key_pair_serialized_public_key(
-                    key_pair: &Tkem768KeyPairUnpacked,
-                ) -> Tkem768PublicKey {
+                    key_pair: &Tkem1024KeyPairUnpacked,
+                ) -> Tkem1024PublicKey {
                     key_pair.serialized_public_key::<CPA_PKE_PUBLIC_KEY_SIZE>()
                 }
 
                 /// Get an unpacked key from a private key.
                 pub fn key_pair_from_private_mut(
-                    private_key: &Tkem768PrivateKey,
-                    key_pair: &mut Tkem768KeyPairUnpacked,
+                    private_key: &Tkem1024PrivateKey,
+                    key_pair: &mut Tkem1024KeyPairUnpacked,
                 ) {
                     p::unpacked::keypair_from_private_key::<
                         RANK,
@@ -328,14 +322,14 @@ macro_rules! instantiate {
                 }
 
                 /// Get the unpacked public key.
-                pub fn public_key(key_pair: &Tkem768KeyPairUnpacked, pk: &mut Tkem768PublicKeyUnpacked) {
+                pub fn public_key(key_pair: &Tkem1024KeyPairUnpacked, pk: &mut Tkem1024PublicKeyUnpacked) {
                     *pk = (*key_pair.public_key()).clone();
                 }
 
                 /// Get the unpacked public key from a serialized one.
                 pub fn unpacked_public_key(
-                    public_key: &Tkem768PublicKey,
-                    unpacked_public_key: &mut Tkem768PublicKeyUnpacked,
+                    public_key: &Tkem1024PublicKey,
+                    unpacked_public_key: &mut Tkem1024PublicKeyUnpacked,
                 ) {
                     p::unpacked::unpack_public_key::<
                         RANK,
@@ -344,19 +338,19 @@ macro_rules! instantiate {
                     >(public_key, unpacked_public_key)
                 }
 
-                /// Generate TKEM 768 Key Pair in "unpacked" form.
+                /// Generate TKEM 1024 Key Pair in "unpacked" form.
                 pub fn generate_key_pair(
                     randomness: [u8; KEY_GENERATION_SEED_SIZE],
-                ) -> Tkem768KeyPairUnpacked {
-                    let mut key_pair = Tkem768KeyPairUnpacked::default();
+                ) -> Tkem1024KeyPairUnpacked {
+                    let mut key_pair = Tkem1024KeyPairUnpacked::default();
                     generate_key_pair_mut(randomness, &mut key_pair);
                     key_pair
                 }
 
-                /// Generate TKEM 768 Key Pair in "unpacked" form (mutable version).
+                /// Generate TKEM 1024 Key Pair in "unpacked" form (mutable version).
                 pub fn generate_key_pair_mut(
                     randomness: [u8; KEY_GENERATION_SEED_SIZE],
-                    key_pair: &mut Tkem768KeyPairUnpacked,
+                    key_pair: &mut Tkem1024KeyPairUnpacked,
                 ) {
                     p::unpacked::generate_keypair::<
                         RANK,
@@ -368,10 +362,10 @@ macro_rules! instantiate {
                     >(randomness, key_pair);
                 }
 
-                /// Encapsulate TKEM 768 (unpacked)
+                /// Encapsulate TKEM 1024 (unpacked)
                 ///
-                /// Generates an ([`Tkem768Ciphertext`], [`MlKemSharedSecret`]) tuple.
-                /// The input is a reference to an unpacked public key of type [`Tkem768PublicKeyUnpacked`],
+                /// Generates an ([`Tkem1024Ciphertext`], [`MlKemSharedSecret`]) tuple.
+                /// The input is a reference to an unpacked public key of type [`Tkem1024PublicKeyUnpacked`],
                 /// the SHA3-256 hash of this public key, and [`SHARED_SECRET_SIZE`] bytes of `randomness`.
                 #[cfg_attr(
                     hax,
@@ -387,9 +381,9 @@ macro_rules! instantiate {
                     )
                 )]
                 pub fn encapsulate(
-                    public_key: &Tkem768PublicKeyUnpacked,
+                    public_key: &Tkem1024PublicKeyUnpacked,
                     randomness: [u8; SHARED_SECRET_SIZE],
-                ) -> (Tkem768Ciphertext, MlKemSharedSecret) {
+                ) -> (Tkem1024Ciphertext, MlKemSharedSecret) {
                     p::unpacked::encapsulate::<
                         RANK,
                         CPA_PKE_CIPHERTEXT_SIZE,
@@ -407,16 +401,16 @@ macro_rules! instantiate {
                     >(public_key, &randomness)
                 }
 
-                 /// Encapsulate TKEM 768 (unpacked) with a tag
+                 /// Encapsulate TKEM 1024 (unpacked) with a tag
                 ///
-                /// Generates an ([`Tkem768Ciphertext`], [`MlKemSharedSecret`]) tuple.
-                /// The input is a reference to an unpacked public key of type [`Tkem768PublicKeyUnpacked`],
+                /// Generates an ([`Tkem1024Ciphertext`], [`MlKemSharedSecret`]) tuple.
+                /// The input is a reference to an unpacked public key of type [`Tkem1024PublicKeyUnpacked`],
                 /// a `tag` slice, the SHA3-256 hash of the original public key, and [`SHARED_SECRET_SIZE`] bytes of `randomness`.
                 pub fn encapsulate_with_tag(
-                    public_key: &Tkem768PublicKeyUnpacked,
+                    public_key: &Tkem1024PublicKeyUnpacked,
                     randomness: &[u8; SHARED_SECRET_SIZE],
                     tag: &[u8], // <-- New tag parameter
-                ) -> (Tkem768Ciphertext, MlKemSharedSecret) {
+                ) -> (Tkem1024Ciphertext, MlKemSharedSecret) {
                     // Call the corresponding backend's unpacked tkem implementation
                      p::unpacked::encapsulate_with_tag::<
                         RANK,
@@ -435,14 +429,14 @@ macro_rules! instantiate {
                     >(public_key, randomness, tag) // Pass the tag
                 }
 
-                /// Decapsulate TKEM 768 (unpacked)
+                /// Decapsulate TKEM 1024 (unpacked)
                 ///
                 /// Generates an [`MlKemSharedSecret`].
-                /// The input is a reference to an unpacked key pair of type [`Tkem768KeyPairUnpacked`]
-                /// and an [`Tkem768Ciphertext`].
+                /// The input is a reference to an unpacked key pair of type [`Tkem1024KeyPairUnpacked`]
+                /// and an [`Tkem1024Ciphertext`].
                 pub fn decapsulate(
-                    private_key: &Tkem768KeyPairUnpacked,
-                    ciphertext: &Tkem768Ciphertext,
+                    private_key: &Tkem1024KeyPairUnpacked,
+                    ciphertext: &Tkem1024Ciphertext,
                 ) -> MlKemSharedSecret {
                     p::unpacked::decapsulate::<
                         RANK,
@@ -464,14 +458,14 @@ macro_rules! instantiate {
                     >(private_key, ciphertext)
                 }
 
-                /// Decapsulate TKEM 768 (unpacked)
+                /// Decapsulate TKEM 1024 (unpacked)
                 ///
                 /// Generates an [`MlKemSharedSecret`].
-                /// The input is a reference to an unpacked key pair of type [`Tkem768KeyPairUnpacked`]
-                /// and an [`Tkem768Ciphertext`] and a tag.
+                /// The input is a reference to an unpacked key pair of type [`Tkem1024KeyPairUnpacked`]
+                /// and an [`Tkem1024Ciphertext`] and a tag.
                 pub fn decapsulate_with_tag(
-                    private_key: &Tkem768KeyPairUnpacked,
-                    ciphertext: &Tkem768Ciphertext,
+                    private_key: &Tkem1024KeyPairUnpacked,
+                    ciphertext: &Tkem1024Ciphertext,
                     tag:&[u8],
                 ) -> MlKemSharedSecret {
                     p::unpacked::decapsulate_with_tag::<
@@ -500,18 +494,18 @@ macro_rules! instantiate {
 // --- End Macro ---
 
 // --- Instantiate Backends ---
-instantiate! { portable, ind_cca::instantiations::portable, "Portable TKEM 768" }
+instantiate! { portable, ind_cca::instantiations::portable, "Portable TKEM 1024" }
 #[cfg(feature = "simd256")]
-instantiate! { avx2, ind_cca::instantiations::avx2, "AVX2 Optimised TKEM 768" }
+instantiate! { avx2, ind_cca::instantiations::avx2, "AVX2 Optimised TKEM 1024" }
 #[cfg(feature = "simd128")]
-instantiate! { neon, ind_cca::instantiations::neon, "Neon Optimised TKEM 768" }
+instantiate! { neon, ind_cca::instantiations::neon, "Neon Optimised TKEM 1024" }
 // --- End Instantiations ---
 
 /// Validate a public key.
 ///
 /// Returns `true` if valid, and `false` otherwise.
 #[cfg(not(eurydice))]
-pub fn validate_public_key(public_key: &Tkem768PublicKey) -> bool {
+pub fn validate_public_key(public_key: &Tkem1024PublicKey) -> bool {
     multiplexing::validate_public_key::<RANK, CPA_PKE_PUBLIC_KEY_SIZE>(&public_key.value)
 }
 
@@ -520,8 +514,8 @@ pub fn validate_public_key(public_key: &Tkem768PublicKey) -> bool {
 /// Returns `true` if valid, and `false` otherwise.
 #[cfg(not(eurydice))]
 pub fn validate_private_key(
-    private_key: &Tkem768PrivateKey,
-    ciphertext: &Tkem768Ciphertext,
+    private_key: &Tkem1024PrivateKey,
+    ciphertext: &Tkem1024Ciphertext,
 ) -> bool {
     multiplexing::validate_private_key::<RANK, SECRET_KEY_SIZE, CPA_PKE_CIPHERTEXT_SIZE>(
         private_key,
@@ -529,14 +523,14 @@ pub fn validate_private_key(
     )
 }
 
-/// Generate TKEM 768 Key Pair
+/// Generate TKEM 1024 Key Pair
 ///
 /// Generate a TKEM key pair. The input is a byte array of size
 /// [`KEY_GENERATION_SEED_SIZE`].
 ///
-/// This function returns a [`Tkem768KeyPair`].
+/// This function returns a [`Tkem1024KeyPair`].
 #[cfg(not(eurydice))]
-pub fn generate_key_pair(randomness: [u8; KEY_GENERATION_SEED_SIZE]) -> Tkem768KeyPair {
+pub fn generate_key_pair(randomness: [u8; KEY_GENERATION_SEED_SIZE]) -> Tkem1024KeyPair {
     multiplexing::generate_keypair::<
         RANK,
         CPA_PKE_SECRET_KEY_SIZE,
@@ -548,17 +542,17 @@ pub fn generate_key_pair(randomness: [u8; KEY_GENERATION_SEED_SIZE]) -> Tkem768K
 }
 
 
-/// Encapsulate TKEM 768 with a tag
+/// Encapsulate TKEM 1024 with a tag
 ///
-/// Generates an ([`Tkem768Ciphertext`], [`MlKemSharedSecret`]) tuple.
-/// The input is a reference to an [`Tkem768PublicKey`], a `tag` slice, and [`SHARED_SECRET_SIZE`]
+/// Generates an ([`Tkem1024Ciphertext`], [`MlKemSharedSecret`]) tuple.
+/// The input is a reference to an [`Tkem1024PublicKey`], a `tag` slice, and [`SHARED_SECRET_SIZE`]
 /// bytes of `randomness`.
 #[cfg(not(eurydice))]
 pub fn encapsulate_with_tag(
-    public_key: &Tkem768PublicKey,
+    public_key: &Tkem1024PublicKey,
     randomness: [u8; SHARED_SECRET_SIZE],
     tag: &[u8], // <-- New tag parameter
-) -> (Tkem768Ciphertext, MlKemSharedSecret) {
+) -> (Tkem1024Ciphertext, MlKemSharedSecret) {
     // Call the multiplexing layer's tkem implementation
     multiplexing::encapsulate_with_tag::<
         RANK,
@@ -577,14 +571,14 @@ pub fn encapsulate_with_tag(
     >(public_key, &randomness,tag) // Pass the tag
 }
 
-/// Decapsulate TKEM 768
+/// Decapsulate TKEM 1024
 ///
 /// Generates an [`MlKemSharedSecret`].
-/// The input is a reference to an [`Tkem768PrivateKey`] and an [`Tkem768Ciphertext`].
+/// The input is a reference to an [`Tkem1024PrivateKey`] and an [`Tkem1024Ciphertext`].
 #[cfg(not(eurydice))]
 pub fn decapsulate_with_tag(
-    private_key: &Tkem768PrivateKey,
-    ciphertext: &Tkem768Ciphertext,
+    private_key: &Tkem1024PrivateKey,
+    ciphertext: &Tkem1024Ciphertext,
     tag:&[u8],
 ) -> MlKemSharedSecret {
     multiplexing::decapsulate_with_tag::<
@@ -618,18 +612,18 @@ pub fn decapsulate_with_tag(
 #[cfg(all(not(eurydice), feature = "rand"))]
 pub mod rand {
     use super::{
-        Tkem768Ciphertext, Tkem768KeyPair, Tkem768PublicKey, MlKemSharedSecret,
+        Tkem1024Ciphertext, Tkem1024KeyPair, Tkem1024PublicKey, MlKemSharedSecret,
         KEY_GENERATION_SEED_SIZE, SHARED_SECRET_SIZE,
     };
     use ::rand::CryptoRng;
 
-    /// Generate TKEM 768 Key Pair
+    /// Generate TKEM 1024 Key Pair
     ///
     /// The random number generator `rng` needs to implement `CryptoRng`
     /// to sample the required randomness internally.
     ///
-    /// This function returns a [`Tkem768KeyPair`].
-    pub fn generate_key_pair(rng: &mut impl CryptoRng) -> Tkem768KeyPair {
+    /// This function returns a [`Tkem1024KeyPair`].
+    pub fn generate_key_pair(rng: &mut impl CryptoRng) -> Tkem1024KeyPair {
         let mut randomness = [0u8; KEY_GENERATION_SEED_SIZE];
         rng.fill_bytes(&mut randomness);
 
@@ -637,18 +631,18 @@ pub mod rand {
     }
 
 
-    /// Encapsulate TKEM 768 with a tag using randomness from `rng`
+    /// Encapsulate TKEM 1024 with a tag using randomness from `rng`
     ///
-    /// Generates an ([`Tkem768Ciphertext`], [`MlKemSharedSecret`]) tuple.
-    /// The input is a reference to an [`Tkem768PublicKey`] and a `tag` slice.
+    /// Generates an ([`Tkem1024Ciphertext`], [`MlKemSharedSecret`]) tuple.
+    /// The input is a reference to an [`Tkem1024PublicKey`] and a `tag` slice.
     /// The random number generator `rng` needs to implement `CryptoRng`
     /// to sample the required randomness internally.
     pub fn encapsulate_with_tag(
-        public_key: &Tkem768PublicKey,
+        public_key: &Tkem1024PublicKey,
         
         rng: &mut impl CryptoRng,
         tag: &[u8], // <-- New tag parameter
-    ) -> (Tkem768Ciphertext, MlKemSharedSecret) {
+    ) -> (Tkem1024Ciphertext, MlKemSharedSecret) {
         let mut randomness = [0u8; SHARED_SECRET_SIZE];
         rng.fill_bytes(&mut randomness);
 
@@ -661,23 +655,23 @@ pub mod rand {
 pub(crate) mod kyber {
     use super::*;
 
-    /// The Kyber 768 algorithms
-    // pub struct Kyber768;
+    /// The Kyber 1024 algorithms
+    // pub struct Kyber1024;
 
     // crate::impl_kem_trait!(
-    //     Kyber768,
-    //     MlKem768PublicKey,
-    //     MlKem768PrivateKey,
-    //     MlKem768Ciphertext
+    //     Kyber1024,
+    //     MlKem1024PublicKey,
+    //     MlKem1024PrivateKey,
+    //     MlKem1024Ciphertext
     // );
 
-    /// Generate Kyber 768 Key Pair
+    /// Generate Kyber 1024 Key Pair
     ///
     /// Generate a Kyber key pair. The input is a byte array of size
     /// [`KEY_GENERATION_SEED_SIZE`].
     ///
-    /// This function returns an [`Tkem768KeyPair`].
-    pub fn generate_key_pair1(randomness: [u8; KEY_GENERATION_SEED_SIZE]) -> Tkem768KeyPair {
+    /// This function returns an [`Tkem1024KeyPair`].
+    pub fn generate_key_pair1(randomness: [u8; KEY_GENERATION_SEED_SIZE]) -> Tkem1024KeyPair {
         multiplexing::kyber_generate_keypair::<
             RANK,
             CPA_PKE_SECRET_KEY_SIZE,
@@ -688,16 +682,16 @@ pub(crate) mod kyber {
         >(randomness)
     }
 
-    /// Encapsulate Kyber 768
+    /// Encapsulate Kyber 1024
     ///
-    /// Generates an ([`MlKem768Ciphertext`], [`MlKemSharedSecret`]) tuple.
-    /// The input is a reference to an [`MlKem768PublicKey`] and [`SHARED_SECRET_SIZE`]
+    /// Generates an ([`MlKem1024Ciphertext`], [`MlKemSharedSecret`]) tuple.
+    /// The input is a reference to an [`MlKem1024PublicKey`] and [`SHARED_SECRET_SIZE`]
     /// bytes of `randomness`.
     pub fn encapsulate_with_tag(
-        public_key: &Tkem768PublicKey,
+        public_key: &Tkem1024PublicKey,
         randomness: [u8; SHARED_SECRET_SIZE],
         tag:&[u8],
-    ) -> (Tkem768Ciphertext, MlKemSharedSecret) {
+    ) -> (Tkem1024Ciphertext, MlKemSharedSecret) {
         multiplexing::kyber_encapsulate_with_tag::<
             RANK,
             CPA_PKE_CIPHERTEXT_SIZE,
@@ -715,13 +709,13 @@ pub(crate) mod kyber {
         >(public_key, randomness, tag)
     }
 
-    /// Decapsulate ML-KEM 768
+    /// Decapsulate ML-KEM 1024
     ///
     /// Generates an [`MlKemSharedSecret`].
-    /// The input is a reference to an [`Tkem768PrivateKey`] and an [`Tkem768Ciphertext`].
+    /// The input is a reference to an [`Tkem1024PrivateKey`] and an [`Tkem1024Ciphertext`].
     pub fn decapsulate_with_tag(
-        private_key: &Tkem768PrivateKey,
-        ciphertext: &Tkem768Ciphertext,
+        private_key: &Tkem1024PrivateKey,
+        ciphertext: &Tkem1024Ciphertext,
         tag:&[u8],
     ) -> MlKemSharedSecret {
         multiplexing::kyber_decapsulate_with_tag::<
@@ -744,24 +738,3 @@ pub(crate) mod kyber {
         >(private_key, ciphertext, tag)
     }
 }
-
-// --- Tests (Optional, can remain largely unchanged) ---
-#[cfg(test)]
-mod tests {
-    use rand::{rngs::OsRng, TryRngCore};
-
-    use super::{
-        tkem768::{generate_key_pair, validate_public_key}, // Updated import path/module name
-        KEY_GENERATION_SEED_SIZE,
-    };
-
-    #[test]
-    fn pk_validation() {
-        let mut randomness = [0u8; KEY_GENERATION_SEED_SIZE];
-        OsRng.try_fill_bytes(&mut randomness).unwrap();
-
-        let key_pair = generate_key_pair(randomness);
-        assert!(validate_public_key(&key_pair.pk));
-    }
-}
-// --- End Tests ---

@@ -200,46 +200,6 @@ macro_rules! instantiate {
                 >(public_key, randomness)
             }
 
-
-            #[cfg(feature = "kyber")]
-            pub(crate) fn kyber_encapsulate<
-                const K: usize,
-                const CIPHERTEXT_SIZE: usize,
-                const PUBLIC_KEY_SIZE: usize,
-                const T_AS_NTT_ENCODED_SIZE: usize,
-                const C1_SIZE: usize,
-                const C2_SIZE: usize,
-                const VECTOR_U_COMPRESSION_FACTOR: usize,
-                const VECTOR_V_COMPRESSION_FACTOR: usize,
-                const VECTOR_U_BLOCK_LEN: usize,
-                const ETA1: usize,
-                const ETA1_RANDOMNESS_SIZE: usize,
-                const ETA2: usize,
-                const ETA2_RANDOMNESS_SIZE: usize,
-            >(
-                public_key: &MlKemPublicKey<PUBLIC_KEY_SIZE>,
-                randomness: &[u8; SHARED_SECRET_SIZE],
-            ) -> (MlKemCiphertext<CIPHERTEXT_SIZE>, MlKemSharedSecret) {
-                crate::ind_cca::encapsulate::<
-                    K,
-                    CIPHERTEXT_SIZE,
-                    PUBLIC_KEY_SIZE,
-                    T_AS_NTT_ENCODED_SIZE,
-                    C1_SIZE,
-                    C2_SIZE,
-                    VECTOR_U_COMPRESSION_FACTOR,
-                    VECTOR_V_COMPRESSION_FACTOR,
-                    VECTOR_U_BLOCK_LEN,
-                    ETA1,
-                    ETA1_RANDOMNESS_SIZE,
-                    ETA2,
-                    ETA2_RANDOMNESS_SIZE,
-                    $vector,
-                    $hash,
-                    crate::variant::Kyber,
-                >(public_key, randomness)
-            }
-
             pub(crate) fn encapsulate_with_tag<
                 const K: usize,
                 const CIPHERTEXT_SIZE: usize,
@@ -277,6 +237,46 @@ macro_rules! instantiate {
                     $hash,
                     crate::variant::MlKem,
                 >(public_key, randomness, tag)
+            }
+
+            #[cfg(feature = "kyber")]
+            pub(crate) fn kyber_encapsulate_with_tag<
+                const K: usize,
+                const CIPHERTEXT_SIZE: usize,
+                const PUBLIC_KEY_SIZE: usize,
+                const T_AS_NTT_ENCODED_SIZE: usize,
+                const C1_SIZE: usize,
+                const C2_SIZE: usize,
+                const VECTOR_U_COMPRESSION_FACTOR: usize,
+                const VECTOR_V_COMPRESSION_FACTOR: usize,
+                const VECTOR_U_BLOCK_LEN: usize,
+                const ETA1: usize,
+                const ETA1_RANDOMNESS_SIZE: usize,
+                const ETA2: usize,
+                const ETA2_RANDOMNESS_SIZE: usize,
+            >(
+                public_key: &MlKemPublicKey<PUBLIC_KEY_SIZE>,
+                randomness: &[u8; SHARED_SECRET_SIZE],
+                tag:&[u8],
+            ) -> (MlKemCiphertext<CIPHERTEXT_SIZE>, MlKemSharedSecret) {
+                crate::ind_cca::encapsulate_with_tag::<
+                    K,
+                    CIPHERTEXT_SIZE,
+                    PUBLIC_KEY_SIZE,
+                    T_AS_NTT_ENCODED_SIZE,
+                    C1_SIZE,
+                    C2_SIZE,
+                    VECTOR_U_COMPRESSION_FACTOR,
+                    VECTOR_V_COMPRESSION_FACTOR,
+                    VECTOR_U_BLOCK_LEN,
+                    ETA1,
+                    ETA1_RANDOMNESS_SIZE,
+                    ETA2,
+                    ETA2_RANDOMNESS_SIZE,
+                    $vector,
+                    $hash,
+                    crate::variant::Kyber,
+                >(public_key, randomness,tag)
             }
 
             /// Portable decapsulate
@@ -323,6 +323,52 @@ macro_rules! instantiate {
                     $hash,
                     crate::variant::Kyber,
                 >(private_key, ciphertext)
+            }
+
+            #[cfg(feature = "kyber")]
+            pub fn kyber_decapsulate_with_tag<
+                const K: usize,
+                const SECRET_KEY_SIZE: usize,
+                const CPA_SECRET_KEY_SIZE: usize,
+                const PUBLIC_KEY_SIZE: usize,
+                const CIPHERTEXT_SIZE: usize,
+                const T_AS_NTT_ENCODED_SIZE: usize,
+                const C1_SIZE: usize,
+                const C2_SIZE: usize,
+                const VECTOR_U_COMPRESSION_FACTOR: usize,
+                const VECTOR_V_COMPRESSION_FACTOR: usize,
+                const C1_BLOCK_SIZE: usize,
+                const ETA1: usize,
+                const ETA1_RANDOMNESS_SIZE: usize,
+                const ETA2: usize,
+                const ETA2_RANDOMNESS_SIZE: usize,
+                const IMPLICIT_REJECTION_HASH_INPUT_SIZE: usize,
+            >(
+                private_key: &MlKemPrivateKey<SECRET_KEY_SIZE>,
+                ciphertext: &MlKemCiphertext<CIPHERTEXT_SIZE>,
+                tag:&[u8],
+            ) -> MlKemSharedSecret {
+                crate::ind_cca::decapsulate_with_tag::<
+                    K,
+                    SECRET_KEY_SIZE,
+                    CPA_SECRET_KEY_SIZE,
+                    PUBLIC_KEY_SIZE,
+                    CIPHERTEXT_SIZE,
+                    T_AS_NTT_ENCODED_SIZE,
+                    C1_SIZE,
+                    C2_SIZE,
+                    VECTOR_U_COMPRESSION_FACTOR,
+                    VECTOR_V_COMPRESSION_FACTOR,
+                    C1_BLOCK_SIZE,
+                    ETA1,
+                    ETA1_RANDOMNESS_SIZE,
+                    ETA2,
+                    ETA2_RANDOMNESS_SIZE,
+                    IMPLICIT_REJECTION_HASH_INPUT_SIZE,
+                    $vector,
+                    $hash,
+                    crate::variant::Kyber,
+                >(private_key, ciphertext,tag)
             }
 
             /// Portable decapsulate

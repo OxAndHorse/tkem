@@ -16,5 +16,10 @@ fn main() {
     println!("Shared Secret (ss): {}", hex::encode(ss.as_slice())); // 假设 ss 有 as_slice() 方法
     let ss = tkem768::decapsulate_with_tag(key_pair.private_key(), &ct,test_tag_1);
     println!("dss:{}",hex::encode(ss.as_slice()));
+
+
+    // #[cfg(feature= "kyber")]
+    // let (ct,ss) = tkem768::kyber_encapsulate_with_tag(key_pair.public_key(), randomness,test_tag_1);
+
     
 }
