@@ -1,7 +1,7 @@
 # 新目录的 Cargo.toml（完全独立，无工作区依赖）
 [package]
 name = "libcrux-ml-tkem"
-version = "0.0.1"  # 或匹配工作区的 0.0.2
+version = "0.0.2"  # 或匹配工作区的 0.0.2
 authors = ["Cryspen"]
 license = "Apache-2.0"
 homepage = "https://github.com/OxAndHorse/libcrux"
@@ -35,7 +35,7 @@ tls_codec = { version = "0.4.2", features = ["derive"], default-features = false
 
 [features]
 default = ["default-no-std", "std"]
-default-no-std = ["mlkem512", "mlkem768", "tkem768", "mlkem1024", "rand"]
+default-no-std = ["mlkem512", "mlkem768", "tkem768", "mlkem1024", "tkem1024","kyber","rand"]
 codec = ["dep:tls_codec"]
 simd128 = ["libcrux-sha3/simd128", "libcrux-intrinsics/simd128"]
 simd256 = ["libcrux-sha3/simd256", "libcrux-intrinsics/simd256"]
@@ -43,6 +43,7 @@ mlkem512 = []
 mlkem768 = []
 mlkem1024 = []
 tkem768 = []
+tkem1024 = []
 kyber = []
 rand = ["dep:rand"]
 std = ["alloc", "rand/std", "tls_codec/std"]

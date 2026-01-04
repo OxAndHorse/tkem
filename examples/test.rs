@@ -1,5 +1,5 @@
 
-use libcrux_ml_tkem::{mlkem768, tkem768,kyber768, tkem1024, kyber1024,  ENCAPS_SEED_SIZE, KEY_GENERATION_SEED_SIZE};
+use libcrux_ml_tkem::{ tkem768,kyber768, tkem1024, kyber1024,  ENCAPS_SEED_SIZE, KEY_GENERATION_SEED_SIZE};
 use rand::{rngs::OsRng, TryRngCore};
 
 // --- 你的 main 函数 ---
@@ -24,7 +24,7 @@ mod tests {
         OsRng.try_fill_bytes(&mut keygen_randomness).unwrap();
 
         // 2. 生成密钥对 (使用 ML-KEM-768)
-        let key_pair = mlkem768::generate_key_pair(keygen_randomness);
+        let key_pair = tkem768::generate_key_pair(keygen_randomness);
 
         // 3. 设置封装随机种子
         let mut encap_randomness = [0u8; ENCAPS_SEED_SIZE];
@@ -90,7 +90,7 @@ mod tests {
 
     #[test]
     // #[cfg(feature = "kyber")]
-    fn kyber768(){
+    fn kyber768_with_tag(){
         let mut keygen_randomness = [0u8; KEY_GENERATION_SEED_SIZE];
         OsRng.try_fill_bytes(&mut keygen_randomness).unwrap();
 
@@ -122,7 +122,7 @@ mod tests {
     }
 
     #[test]
-    fn kyber1024(){
+    fn kyber1024_with_tag(){
         let mut keygen_randomness = [0u8; KEY_GENERATION_SEED_SIZE];
         OsRng.try_fill_bytes(&mut keygen_randomness).unwrap();
 
