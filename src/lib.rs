@@ -173,6 +173,17 @@ cfg_kyber! {
         }
     }
 
+    #[cfg(feature = "tkem768")]
+    #[cfg_attr(docsrs, doc(cfg(all(feature = "kyber", feature = "tkem768"))))]
+    pub mod kyber768_with_tag {
+        //! Kyber 768 (NIST PQC Round 3)
+        cfg_no_eurydice! {
+            pub use crate::mlkem768::kyber::Kyber768;
+            pub use crate::tkem768::kyber::generate_key_pair1;
+            pub use crate::tkem768::kyber::decapsulate_with_tag;
+            pub use crate::tkem768::kyber::encapsulate_with_tag;
+        }
+    }
     #[cfg(feature = "mlkem1024")]
     #[cfg_attr(docsrs, doc(cfg(all(feature = "kyber", feature = "mlkem1024"))))]
     pub mod kyber1024 {
@@ -187,6 +198,17 @@ cfg_kyber! {
             pub use crate::tkem1024::kyber::encapsulate_with_tag;
             pub use crate::mlkem1024::validate_public_key;
             pub use crate::mlkem1024::validate_private_key;
+        }
+    }
+    #[cfg(feature = "tkem1024")]
+    #[cfg_attr(docsrs, doc(cfg(all(feature = "kyber", feature = "tkem1024"))))]
+    pub mod kyber1024_with_tag {
+        //! Kyber 1024 (NIST PQC Round 3)
+        cfg_no_eurydice! {
+            pub use crate::tkem1024::kyber::generate_key_pair1;
+            pub use crate::tkem1024::kyber::decapsulate_with_tag;
+            pub use crate::tkem1024::kyber::encapsulate_with_tag;
+
         }
     }
 }

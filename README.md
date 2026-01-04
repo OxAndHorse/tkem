@@ -1,6 +1,7 @@
 # ML-TKEM
 
 This crate implements all three ML-KEM ([FIPS 203](https://csrc.nist.gov/pubs/fips/203/final)) variants 512, 768, and 1024.
+And also implements Tag-KEM extended by ML-KEM.
 For each algorithm, it inlcudes a portable Rust implementation, as well as SIMD implementations for Intel AVX2 and AArch64 Neon platforms.
 
 ## Verification
@@ -57,8 +58,42 @@ analogously for encapsulation and decapsulation.
 
  // Decapsulating a shared secret with a private key.
  let shared_secret_decapsulated = mlkem768::decapsulate(key_pair.private_key(), &ciphertext);
-```
 
+
+ 
+```
+use KEM with tag
+
+```Rust
+fn test_tkem768() {
+
+        let mut keygen_randomness = [0u8; KEY_GENERATION_SEED_SIZE];
+        OsRng.try_fill_bytes(&mut keygen_randomness).unwrap();
+
+        let key_pair = tkem768::generate_key_pair(keygen_randomness);
+
+
+        let mut encap_randomness = [0u8; ENCAPS_SEED_SIZE];
+        OsRng.try_fill_bytes(&mut encap_randomness).unwrap();
+
+
+        let test_tag = b"ConsistencyTestTag";
+
+
+        let (ciphertext, shared_secret_encap) =
+            tkem768::encapsulate_with_tag(key_pair.public_key(), encap_randomness, test_tag);
+
+        let shared_secret_decap =
+            tkem768::decapsulate_with_tag(key_pair.private_key(), &ciphertext, test_tag);
+
+
+        assert_eq!(
+            shared_secret_encap.as_slice(),
+            shared_secret_decap.as_slice(),
+            "Encapsulated and Decapsulated shared secrets should be equal."
+        );
+    }
+```
 ### Kyber Round 3
 
 The `kyber` flag also gives access

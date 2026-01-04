@@ -1,5 +1,5 @@
 
-use libcrux_ml_tkem::{ tkem768,kyber768, tkem1024, kyber1024,  ENCAPS_SEED_SIZE, KEY_GENERATION_SEED_SIZE};
+use libcrux_ml_tkem::{ tkem768, tkem1024, kyber1024_with_tag,kyber768_with_tag,  ENCAPS_SEED_SIZE, KEY_GENERATION_SEED_SIZE};
 use rand::{rngs::OsRng, TryRngCore};
 
 // --- 你的 main 函数 ---
@@ -95,7 +95,7 @@ mod tests {
         OsRng.try_fill_bytes(&mut keygen_randomness).unwrap();
 
         // 2. 生成密钥对 (使用 ML-KEM-768)
-        let key_pair = kyber768::generate_key_pair1(keygen_randomness);
+        let key_pair = kyber768_with_tag::generate_key_pair1(keygen_randomness);
 
         // 3. 设置封装随机种子
         let mut encap_randomness = [0u8; ENCAPS_SEED_SIZE];
@@ -105,11 +105,11 @@ mod tests {
         let test_tag = b"ConsistencyTestTag";
 
         let (ciphertext, shared_secret_encap) =
-            kyber768::encapsulate_with_tag(key_pair.public_key(), encap_randomness, test_tag);
+            kyber768_with_tag::encapsulate_with_tag(key_pair.public_key(), encap_randomness, test_tag);
 
         // 6. 执行解封装 (使用 T-KEM-768)
         let shared_secret_decap =
-            kyber768::decapsulate_with_tag(key_pair.private_key(), &ciphertext, test_tag);
+            kyber768_with_tag::decapsulate_with_tag(key_pair.private_key(), &ciphertext, test_tag);
 
         // 7. 断言共享秘密相等
         // 使用 .as_slice() 获取字节切片进行比较
@@ -127,7 +127,7 @@ mod tests {
         OsRng.try_fill_bytes(&mut keygen_randomness).unwrap();
 
         // 2. 生成密钥对 (使用 ML-KEM-768)
-        let key_pair = kyber1024::generate_key_pair1(keygen_randomness);
+        let key_pair = kyber1024_with_tag::generate_key_pair1(keygen_randomness);
 
         // 3. 设置封装随机种子
         let mut encap_randomness = [0u8; ENCAPS_SEED_SIZE];
@@ -137,11 +137,11 @@ mod tests {
         let test_tag = b"ConsistencyTestTag";
 
         let (ciphertext, shared_secret_encap) =
-            kyber1024::encapsulate_with_tag(key_pair.public_key(), encap_randomness, test_tag);
+            kyber1024_with_tag::encapsulate_with_tag(key_pair.public_key(), encap_randomness, test_tag);
 
         // 6. 执行解封装 (使用 T-KEM-768)
         let shared_secret_decap =
-            kyber1024::decapsulate_with_tag(key_pair.private_key(), &ciphertext, test_tag);
+            kyber1024_with_tag::decapsulate_with_tag(key_pair.private_key(), &ciphertext, test_tag);
 
         // 7. 断言共享秘密相等
         // 使用 .as_slice() 获取字节切片进行比较
